@@ -260,6 +260,7 @@ func main() {
 	case "projects":
 		if len(os.Args) < 3 {
 			fmt.Println("Usage: timetrack projects set \"Proj1,Proj2,Proj3,...\"")
+			fmt.Println("       timetrack projects parse \"Date,Proj1,Proj2,...,Total\"")
 			fmt.Println("       timetrack projects list")
 			return
 		}
@@ -277,6 +278,42 @@ func main() {
 			config.Projects = projects
 			saveConfig(config)
 			fmt.Printf("Set %d project columns\n", len(projects))
+		case "parse":
+			if len(os.Args) < 4 {
+				fmt.Println("Usage: timetrack projects parse \"Date,Proj1,Proj2,...,Total Time Spent\"")
+				fmt.Println("Paste the full header row from Excel - first and last columns are stripped automatically")
+				return
+			}
+			cols := strings.Split(os.Args[3], ",")
+			for i, p := range cols {
+				cols[i] = strings.TrimSpace(p)
+			}
+			// Strip first and last columns
+			if len(cols) > 2 {
+				cols = cols[1 : len(cols)-1]
+			}
+			config.Projects = cols
+
+			// Auto-generate aliases
+			if config.Aliases == nil {
+				config.Aliases = make(map[string]string)
+			}
+			for _, project := range cols {
+				alias := generateAlias(project, config.Aliases)
+				config.Aliases[alias] = project
+			}
+
+			saveConfig(config)
+			fmt.Printf("Set %d project columns with aliases:\n", len(cols))
+			for _, p := range cols {
+				// Find alias for this project
+				for alias, name := range config.Aliases {
+					if name == p {
+						fmt.Printf("  %s → %s\n", alias, p)
+						break
+					}
+				}
+			}
 		case "list":
 			if len(config.Projects) == 0 {
 				fmt.Println("No projects configured")
