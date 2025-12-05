@@ -1,8 +1,8 @@
 # Get started
-1. Build the .exe using go build -o timetrack.exe .
+1. Build the .exe using `go build -o timetrack.exe .`
 2. Add the path to the directory containing the .exe to your PATH
-3. Test it is working with timetrack help
-4. Make it auto-start or run timetrack start-bg if you want notifications.
+3. Test it is working with `timetrack help`
+4. Make it auto-start or run `timetrack start-bg` if you want notifications.
 
 # Configure
 Check out the Config section in the help to set up things like recurring meetings.
