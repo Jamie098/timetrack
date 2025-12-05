@@ -86,3 +86,10 @@ func getTotalTracked(day DayData) float64 {
 	}
 	return total
 }
+
+func resolveProject(name string, config Config) string {
+	if fullName, ok := config.Aliases[strings.ToLower(name)]; ok {
+		return fullName
+	}
+	return name
+}

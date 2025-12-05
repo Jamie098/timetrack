@@ -10,14 +10,17 @@ func loadConfig() Config {
 		ReminderTimes:     []string{"09:00", "12:00", "15:00"},
 		RecurringMeetings: []RecurringMeeting{},
 		Projects:          []string{},
+		Aliases:           make(map[string]string),
 	}
 	bytes, err := os.ReadFile(getConfigPath())
 	if err != nil {
-		// Create default config
 		saveConfig(config)
 		return config
 	}
 	json.Unmarshal(bytes, &config)
+	if config.Aliases == nil {
+		config.Aliases = make(map[string]string)
+	}
 	return config
 }
 

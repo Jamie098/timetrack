@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"sort"
 	"strings"
+	"time"
 )
 
 func printStatus(day DayData) {
@@ -45,7 +46,7 @@ func printStatus(day DayData) {
 	if remaining < 0 {
 		fmt.Printf("⚠️  Over-allocated by %.1f%%!\n\n", -remaining)
 	} else if remaining == 0 {
-		fmt.Println("✨ Day fully allocated!\n")
+		fmt.Println("✨ Day fully allocated!")
 	}
 }
 
@@ -67,4 +68,55 @@ func sortedKeys(m map[string]float64) []string {
 	}
 	sort.Strings(keys)
 	return keys
+}
+
+func printWeekExport(data map[string]DayData, config Config) {
+	if len(config.Projects) == 0 {
+		fmt.Println("No projects configured. Set them first:")
+		fmt.Println("  timetrack projects set \"Proj1,Proj2,Proj3,...\"")
+		return
+	}
+
+	now := time.Now()
+	weekday := int(now.Weekday())
+	if weekday == 0 {
+		weekday = 7
+	}
+	monday := now.AddDate(0, 0, -(weekday - 1))
+
+	// Header
+	fmt.Print("Date")
+	for _, p := range config.Projects {
+		fmt.Print("," + p)
+	}
+	fmt.Println(",Total Time Spent")
+
+	// Each day
+	for i := range 7 {
+		date := monday.AddDate(0, 0, i)
+		dateStr := date.Format("2006-01-02")
+		displayDate := date.Format("2-Jan")
+
+		fmt.Print(displayDate)
+
+		day, exists := data[dateStr]
+		var total float64
+
+		for _, p := range config.Projects {
+			pct := 0.0
+			if exists {
+				if val, ok := day.Projects[p]; ok {
+					pct = val
+				}
+			}
+			total += pct
+			if pct == 0 {
+				fmt.Print(",")
+			} else {
+				fmt.Printf(",%.1f%%", pct)
+			}
+		}
+
+		fmt.Println()
+	}
 }

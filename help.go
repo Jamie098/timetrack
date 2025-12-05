@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 )
 
@@ -18,6 +19,16 @@ Usage:
   timetrack clear                Clear today's data
   timetrack history [days]       Show history (default: 7 days)
 
+Export:
+  timetrack week                 Output current week as tab-separated (for Excel)
+
+Projects & Aliases:
+  timetrack projects set "P1,P2,P3"   Set project columns (for week export)
+  timetrack projects list             List project columns
+  timetrack alias <short> <full>      Create alias (e.g., ctgov -> CT.Gov Automation)
+  timetrack alias rm <short>          Remove alias
+  timetrack alias list                List all aliases
+
 Config:
   timetrack config               Show current config
   timetrack config edit          Open config file in editor
@@ -32,10 +43,10 @@ Reminders:
   timetrack status               Check if reminder service is running
 
 Examples:
-  timetrack meeting add standup 6.25 weekdays
-  timetrack meeting add retro 12.5 fri
-  timetrack reminder 09:00,12:00,15:30,17:00
-  timetrack add clinical-trials 25
+  timetrack projects set "CT.Gov Automation,Bugs,Tech Debt"
+  timetrack alias ctgov CT.Gov Automation
+  timetrack add ctgov 25
+  timetrack week
 
 Days: mon, tue, wed, thu, fri, sat, sun, daily, weekdays
 
@@ -68,10 +79,26 @@ func printConfig(config Config) {
 		}
 	}
 
-	if len(config.Projects) > 0 {
-		fmt.Println("\nSaved projects:")
-		for _, p := range config.Projects {
-			fmt.Printf("   • %s\n", p)
+	fmt.Println("\nProjects (column order for export):")
+	if len(config.Projects) == 0 {
+		fmt.Println("   (none - use 'timetrack projects set \"Proj1,Proj2,...\"')")
+	} else {
+		for i, p := range config.Projects {
+			fmt.Printf("   %d. %s\n", i+1, p)
+		}
+	}
+
+	fmt.Println("\nAliases:")
+	if len(config.Aliases) == 0 {
+		fmt.Println("   (none - use 'timetrack alias <short> <full name>')")
+	} else {
+		aliases := make([]string, 0, len(config.Aliases))
+		for k := range config.Aliases {
+			aliases = append(aliases, k)
+		}
+		sort.Strings(aliases)
+		for _, k := range aliases {
+			fmt.Printf("   • %s → %s\n", k, config.Aliases[k])
 		}
 	}
 	fmt.Println()

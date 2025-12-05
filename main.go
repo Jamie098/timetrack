@@ -2,20 +2,14 @@ package main
 
 import (
 	"bufio"
-
 	"fmt"
 	"os"
 	"os/exec"
-
 	"runtime"
 	"sort"
 	"strconv"
 	"strings"
 )
-
-// ============== Config ==============
-
-// ============== Data ==============
 
 func main() {
 	config := loadConfig()
@@ -44,7 +38,7 @@ func main() {
 			fmt.Println("Usage: timetrack add <project> <percent>")
 			return
 		}
-		project := os.Args[2]
+		project := resolveProject(os.Args[2], config)
 		pct, err := strconv.ParseFloat(os.Args[3], 64)
 		if err != nil {
 			fmt.Println("Invalid percentage:", os.Args[3])
@@ -88,7 +82,7 @@ func main() {
 			fmt.Println("Usage: timetrack rm <project>")
 			return
 		}
-		project := os.Args[2]
+		project := resolveProject(os.Args[2], config)
 		if _, ok := day.Projects[project]; ok {
 			delete(day.Projects, project)
 			data[today()] = day
@@ -262,6 +256,82 @@ func main() {
 	case "test-notify":
 		sendNotification("⏰ TimeTrack Test", "Notifications are working!")
 		fmt.Println("Test notification sent")
+
+	case "projects":
+		if len(os.Args) < 3 {
+			fmt.Println("Usage: timetrack projects set \"Proj1,Proj2,Proj3,...\"")
+			fmt.Println("       timetrack projects list")
+			return
+		}
+		subcmd := os.Args[2]
+		switch subcmd {
+		case "set":
+			if len(os.Args) < 4 {
+				fmt.Println("Usage: timetrack projects set \"Proj1,Proj2,Proj3,...\"")
+				return
+			}
+			projects := strings.Split(os.Args[3], ",")
+			for i, p := range projects {
+				projects[i] = strings.TrimSpace(p)
+			}
+			config.Projects = projects
+			saveConfig(config)
+			fmt.Printf("Set %d project columns\n", len(projects))
+		case "list":
+			if len(config.Projects) == 0 {
+				fmt.Println("No projects configured")
+			} else {
+				for i, p := range config.Projects {
+					fmt.Printf("%d. %s\n", i+1, p)
+				}
+			}
+		}
+
+	case "alias":
+		if len(os.Args) < 3 {
+			fmt.Println("Usage: timetrack alias <short> <full project name>")
+			fmt.Println("       timetrack alias rm <short>")
+			fmt.Println("       timetrack alias list")
+			return
+		}
+		if os.Args[2] == "list" {
+			if len(config.Aliases) == 0 {
+				fmt.Println("No aliases configured")
+			} else {
+				aliases := make([]string, 0, len(config.Aliases))
+				for k := range config.Aliases {
+					aliases = append(aliases, k)
+				}
+				sort.Strings(aliases)
+				for _, k := range aliases {
+					fmt.Printf("%s → %s\n", k, config.Aliases[k])
+				}
+			}
+			return
+		}
+		if os.Args[2] == "rm" && len(os.Args) >= 4 {
+			short := strings.ToLower(os.Args[3])
+			if _, ok := config.Aliases[short]; ok {
+				delete(config.Aliases, short)
+				saveConfig(config)
+				fmt.Printf("Removed alias: %s\n", short)
+			} else {
+				fmt.Printf("Alias '%s' not found\n", short)
+			}
+			return
+		}
+		if len(os.Args) < 4 {
+			fmt.Println("Usage: timetrack alias <short> <full project name>")
+			return
+		}
+		short := strings.ToLower(os.Args[2])
+		full := strings.Join(os.Args[3:], " ")
+		config.Aliases[short] = full
+		saveConfig(config)
+		fmt.Printf("Alias set: %s → %s\n", short, full)
+
+	case "week":
+		printWeekExport(data, config)
 
 	default:
 		fmt.Printf("Unknown command: %s\n", cmd)

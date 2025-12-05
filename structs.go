@@ -17,4 +17,5 @@ type Config struct {
 	ReminderTimes     []string           `json:"reminder_times"`
 	RecurringMeetings []RecurringMeeting `json:"recurring_meetings"`
 	Projects          []string           `json:"projects"`
+	Aliases           map[string]string  `json:"aliases"`
 }
