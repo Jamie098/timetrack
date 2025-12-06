@@ -35,15 +35,16 @@ func main() {
 
 	case "add":
 		if len(os.Args) < 4 {
-			fmt.Println("Usage: timetrack add <project> <percent>")
+			fmt.Println("Usage: timetrack add <project> <hours>")
 			return
 		}
 		project := resolveProject(os.Args[2], config)
-		pct, err := strconv.ParseFloat(os.Args[3], 64)
+		hours, err := strconv.ParseFloat(os.Args[3], 64)
 		if err != nil {
-			fmt.Println("Invalid percentage:", os.Args[3])
+			fmt.Println("Invalid hours:", os.Args[3])
 			return
 		}
+		pct := hoursToPercent(hours)
 		if day.Projects == nil {
 			day.Projects = make(map[string]float64)
 		}
@@ -55,15 +56,16 @@ func main() {
 
 	case "exclude", "ex":
 		if len(os.Args) < 4 {
-			fmt.Println("Usage: timetrack exclude <meeting-name> <percent>")
+			fmt.Println("Usage: timetrack exclude <meeting-name> <hours>")
 			return
 		}
 		name := os.Args[2]
-		pct, err := strconv.ParseFloat(os.Args[3], 64)
+		hours, err := strconv.ParseFloat(os.Args[3], 64)
 		if err != nil {
-			fmt.Println("Invalid percentage:", os.Args[3])
+			fmt.Println("Invalid hours:", os.Args[3])
 			return
 		}
+		pct := hoursToPercent(hours)
 		if day.ExcludedMeetings == nil {
 			day.ExcludedMeetings = make(map[string]float64)
 		}
@@ -151,7 +153,7 @@ func main() {
 
 	case "meeting":
 		if len(os.Args) < 3 {
-			fmt.Println("Usage: timetrack meeting add <name> <percent> <days>")
+			fmt.Println("Usage: timetrack meeting add <name> <hours> <days>")
 			fmt.Println("       timetrack meeting rm <name>")
 			return
 		}
@@ -159,16 +161,17 @@ func main() {
 		switch subcmd {
 		case "add":
 			if len(os.Args) < 6 {
-				fmt.Println("Usage: timetrack meeting add <name> <percent> <days>")
+				fmt.Println("Usage: timetrack meeting add <name> <hours> <days>")
 				fmt.Println("Days: mon,tue,wed,thu,fri,sat,sun,daily,weekdays")
 				return
 			}
 			name := os.Args[3]
-			pct, err := strconv.ParseFloat(os.Args[4], 64)
+			hours, err := strconv.ParseFloat(os.Args[4], 64)
 			if err != nil {
-				fmt.Println("Invalid percentage:", os.Args[4])
+				fmt.Println("Invalid hours:", os.Args[4])
 				return
 			}
+			pct := hoursToPercent(hours)
 			days := strings.Split(strings.ToLower(os.Args[5]), ",")
 
 			// Check if meeting already exists, update it

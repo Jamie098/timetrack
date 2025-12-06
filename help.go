@@ -8,19 +8,19 @@ import (
 
 func printHelp() {
 	fmt.Println(`
-timetrack - Track your day as percentages
+timetrack - Track your day in hours
 
 Usage:
-  timetrack                      Show today's status
-  timetrack add <project> <%>    Add/update time to a project (use alias or full name)
-  timetrack exclude <name> <%>   Exclude ceremony time (one-off)
-  timetrack rm <project>         Remove a project entry
-  timetrack rmex <name>          Remove an excluded meeting
-  timetrack clear                Clear today's data
-  timetrack history [days]       Show history (default: 7 days)
+  timetrack                        Show today's status
+  timetrack add <project> <hours>  Add/update time to a project (use alias or full name)
+  timetrack exclude <name> <hours> Exclude ceremony time (one-off)
+  timetrack rm <project>           Remove a project entry
+  timetrack rmex <name>            Remove an excluded meeting
+  timetrack clear                  Clear today's data
+  timetrack history [days]         Show history (default: 7 days)
 
 Export:
-  timetrack week                 Output current week as CSV (for Excel)
+  timetrack week                   Output current week as CSV (for Excel)
 
 Projects & Aliases:
   timetrack projects parse "Date,P1,P2,...,Total"   Parse Excel header (auto-generates aliases)
@@ -33,7 +33,7 @@ Projects & Aliases:
 Config:
   timetrack config               Show current config
   timetrack config edit          Open config file in editor
-  timetrack meeting add <name> <percent> <days>   Add recurring meeting
+  timetrack meeting add <name> <hours> <days>   Add recurring meeting
   timetrack meeting rm <name>    Remove recurring meeting
   timetrack reminder <times>     Set reminder times (e.g., "09:00,12:00,15:00")
 
@@ -46,25 +46,23 @@ Reminders:
 Setup:
   1. Parse your Excel header (copy the header row from CSV):
      timetrack projects parse "Date,CT.GOV Automation,Bugs,...,Total Time Spent"
-  
+
   2. Check your aliases:
      timetrack alias list
-  
+
   3. Add recurring meetings:
-     timetrack meeting add standup 6.25 weekdays
-  
+     timetrack meeting add standup 0.5 weekdays
+
   4. Start tracking:
-     timetrack add ctgo 25
-     timetrack add bugs 12.5
+     timetrack add ctgo 2
+     timetrack add bugs 1
 
   5. Export at end of week:
      timetrack week
 
 Days: mon, tue, wed, thu, fri, sat, sun, daily, weekdays
 
-Quick reference (8hr day):
-  15min = 3.125%    30min = 6.25%    45min = 9.375%
-  1hr   = 12.5%     1.5hr = 18.75%   2hr   = 25%`)
+Note: Based on 8-hour workday. All input is in hours, converted to percentages internally.`)
 }
 
 func printConfig(config Config) {

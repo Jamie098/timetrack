@@ -93,3 +93,8 @@ func resolveProject(name string, config Config) string {
 	}
 	return name
 }
+
+func hoursToPercent(hours float64) float64 {
+	// Assuming an 8-hour workday
+	return (hours / 8.0) * 100.0
+}
