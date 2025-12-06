@@ -13,23 +13,25 @@ func printStatus(day DayData) {
 	remaining := available - tracked
 
 	fmt.Println()
-	fmt.Printf("📅 %s\n", day.Date)
+	fmt.Printf("%s📅 %s%s\n", ColorBold, day.Date, ColorReset)
 	fmt.Println(strings.Repeat("─", 45))
 
 	if day.ExcludedPercent > 0 {
-		fmt.Printf("🚫 Excluded (ceremonies): %.1f%%\n", day.ExcludedPercent)
+		fmt.Printf("🚫 Excluded (ceremonies): %s%.1f%%%s\n", ColorGray, day.ExcludedPercent, ColorReset)
 		if len(day.ExcludedMeetings) > 0 {
 			meetings := sortedKeys(day.ExcludedMeetings)
 			for _, name := range meetings {
-				fmt.Printf("   • %s: %.1f%%\n", name, day.ExcludedMeetings[name])
+				fmt.Printf("   • %s: %s%.1f%%%s\n", name, ColorGray, day.ExcludedMeetings[name], ColorReset)
 			}
 		}
 		fmt.Println()
 	}
 
-	fmt.Printf("📊 Available to track: %.1f%%\n", available)
-	fmt.Printf("✅ Tracked: %.1f%%\n", tracked)
-	fmt.Printf("⏳ Remaining: %.1f%%\n", remaining)
+	fmt.Printf("📊 Available to track: %s%.1f%%%s\n", ColorCyan, available, ColorReset)
+	fmt.Printf("✅ Tracked: %s%.1f%%%s\n", ColorBlue, tracked, ColorReset)
+
+	statusColor := getStatusColor(remaining)
+	fmt.Printf("⏳ Remaining: %s%.1f%%%s\n", statusColor, remaining, ColorReset)
 	fmt.Println()
 
 	if len(day.Projects) > 0 {
@@ -38,15 +40,17 @@ func printStatus(day DayData) {
 		for _, name := range projects {
 			pct := day.Projects[name]
 			bar := progressBar(pct, 20)
-			fmt.Printf("   %s %5.1f%% %s\n", bar, pct, name)
+			fmt.Printf("   %s %s%5.1f%%%s %s\n", bar, ColorBlue, pct, ColorReset, name)
 		}
 		fmt.Println()
 	}
 
 	if remaining < 0 {
-		fmt.Printf("⚠️  Over-allocated by %.1f%%!\n\n", -remaining)
+		fmt.Printf("%s⚠️  Over-allocated by %.1f%%!%s\n\n", ColorRed, -remaining, ColorReset)
 	} else if remaining == 0 {
-		fmt.Println("✨ Day fully allocated!")
+		fmt.Printf("%s✨ Day fully allocated!%s\n", ColorGreen, ColorReset)
+	} else if remaining < 10 {
+		fmt.Printf("%s💡 Only %.1f%% remaining - almost done!%s\n", ColorYellow, remaining, ColorReset)
 	}
 }
 

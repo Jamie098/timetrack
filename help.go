@@ -11,19 +11,29 @@ func printHelp() {
 timetrack - Track your day in hours
 
 Usage:
-  timetrack                        Show today's status
-  timetrack add <project> <hours>  Add/update time to a project (use alias or full name)
+  timetrack                        Interactive mode (no args)
+  timetrack add <project> <hours>  Add/update time to a project
+  timetrack edit <project> <hours> Update existing project time
   timetrack exclude <name> <hours> Exclude ceremony time (one-off)
   timetrack rm <project>           Remove a project entry
   timetrack rmex <name>            Remove an excluded meeting
+  timetrack undo                   Remove last added project
   timetrack clear                  Clear today's data
+  timetrack summary                Compact one-line status
   timetrack history [days]         Show history (default: 7 days)
 
-Export:
-  timetrack week                   Output current week as CSV (for Excel)
+Export & Import:
+  timetrack week                   Output current week as CSV (stdout)
+  timetrack export [format] [file] Export data (formats: csv, json, all)
+  timetrack import <csv-file>      Import data from CSV
+
+Reports & Analytics:
+  timetrack report week            Weekly summary report
+  timetrack report project <name>  Project-specific report
+  timetrack report stats           Overall statistics
 
 Projects & Aliases:
-  timetrack projects parse "Date,P1,P2,...,Total"   Parse Excel header (auto-generates aliases)
+  timetrack projects parse "Date,P1,P2,...,Total"   Parse Excel header (auto-aliases)
   timetrack projects set "P1,P2,P3"                 Set project columns manually
   timetrack projects list                           List project columns
   timetrack alias <short> <full>                    Create/update alias
@@ -31,34 +41,39 @@ Projects & Aliases:
   timetrack alias list                              List all aliases
 
 Config:
-  timetrack config               Show current config
-  timetrack config edit          Open config file in editor
+  timetrack config                 Show current config
+  timetrack config edit            Open config file in editor
   timetrack meeting add <name> <hours> <days>   Add recurring meeting
-  timetrack meeting rm <name>    Remove recurring meeting
-  timetrack reminder <times>     Set reminder times (e.g., "09:00,12:00,15:00")
+  timetrack meeting rm <name>      Remove recurring meeting
+  timetrack reminder <times>       Set reminder times (e.g., "09:00,12:00,15:00")
 
 Reminders:
-  timetrack start                Start reminder service (foreground)
-  timetrack start-bg             Start reminder service (background)
-  timetrack stop                 Stop reminder service
-  timetrack status               Check if reminder service is running
+  timetrack start                  Start reminder service (foreground)
+  timetrack start-bg               Start reminder service (background)
+  timetrack stop                   Stop reminder service
+  timetrack status                 Check if reminder service is running
 
-Setup:
-  1. Parse your Excel header (copy the header row from CSV):
-     timetrack projects parse "Date,CT.GOV Automation,Bugs,...,Total Time Spent"
+Features:
+  • Interactive mode when no command specified
+  • Fuzzy matching for project names
+  • Color-coded display (green/yellow/red based on allocation)
+  • Automatic warnings for over-allocation or unusual values
+  • CSV import/export with multiple formats
+  • Comprehensive reports and analytics
 
-  2. Check your aliases:
-     timetrack alias list
+Quick Start:
+  1. Parse your Excel header:
+     timetrack projects parse "Date,CT.GOV Automation,Bugs,...,Total"
 
-  3. Add recurring meetings:
+  2. Add recurring meetings:
      timetrack meeting add standup 0.5 weekdays
 
-  4. Start tracking:
+  3. Track time (supports fuzzy matching):
      timetrack add ctgo 2
-     timetrack add bugs 1
+     timetrack add bugs 1.5
 
-  5. Export at end of week:
-     timetrack week
+  4. View reports:
+     timetrack report week
 
 Days: mon, tue, wed, thu, fri, sat, sun, daily, weekdays
 

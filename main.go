@@ -23,7 +23,7 @@ func main() {
 	}
 
 	if len(os.Args) < 2 {
-		printStatus(day)
+		runInteractive(data, config, day)
 		return
 	}
 
@@ -38,20 +38,37 @@ func main() {
 			fmt.Println("Usage: timetrack add <project> <hours>")
 			return
 		}
-		project := resolveProject(os.Args[2], config)
+		project := resolveProjectWithSuggestions(os.Args[2], config, true)
 		hours, err := strconv.ParseFloat(os.Args[3], 64)
 		if err != nil {
 			fmt.Println("Invalid hours:", os.Args[3])
 			return
 		}
+
+		// Validate time
 		pct := hoursToPercent(hours)
+		if pct > 100 {
+			fmt.Printf("⚠️  Warning: %.2f hours is %.1f%% of an 8-hour day (>100%%). Did you mean %.2f hours?\n",
+				hours, pct, hours/10)
+		}
+
 		if day.Projects == nil {
 			day.Projects = make(map[string]float64)
 		}
 		day.Projects[project] = pct
+		day.LastModified = project // Track for undo
 		data[today()] = day
 		saveData(data)
-		fmt.Printf("Added %.1f%% to %s\n", pct, project)
+
+		// Check total allocation
+		total := getTotalTracked(day)
+		available := getAvailablePercent(day)
+		if total > available {
+			fmt.Printf("Added %.1f%% to %s\n", pct, project)
+			fmt.Printf("⚠️  Warning: Over-allocated by %.1f%%!\n", total-available)
+		} else {
+			fmt.Printf("Added %.1f%% to %s\n", pct, project)
+		}
 		printStatus(day)
 
 	case "exclude", "ex":
@@ -373,10 +390,193 @@ func main() {
 	case "week":
 		printWeekExport(data, config)
 
+	case "import":
+		if len(os.Args) < 3 {
+			fmt.Println("Usage: timetrack import <csv-file>")
+			return
+		}
+		if err := importFromCSV(os.Args[2], config); err != nil {
+			fmt.Println("Import failed:", err)
+		}
+
+	case "export":
+		format := "csv"
+		filename := ""
+
+		if len(os.Args) >= 3 {
+			format = strings.ToLower(os.Args[2])
+		}
+
+		switch format {
+		case "json":
+			if len(os.Args) >= 4 {
+				filename = os.Args[3]
+			} else {
+				filename = "timetrack-export.json"
+			}
+			if err := exportToJSON(data, filename); err != nil {
+				fmt.Println("Export failed:", err)
+			}
+
+		case "csv", "week":
+			if len(os.Args) >= 4 {
+				filename = os.Args[3]
+			} else {
+				filename = "timetrack-week.csv"
+			}
+			if err := exportWeekToCSV(data, config, filename); err != nil {
+				fmt.Println("Export failed:", err)
+			}
+
+		case "all":
+			if len(os.Args) >= 4 {
+				filename = os.Args[3]
+			} else {
+				filename = "timetrack-all.csv"
+			}
+			if err := exportAllToCSV(data, config, filename); err != nil {
+				fmt.Println("Export failed:", err)
+			}
+
+		default:
+			fmt.Println("Unknown export format:", format)
+			fmt.Println("Supported formats: json, csv, week, all")
+		}
+
+	case "undo":
+		handleUndo(data, &day)
+
+	case "edit":
+		if len(os.Args) < 4 {
+			fmt.Println("Usage: timetrack edit <project> <hours>")
+			return
+		}
+		project := resolveProjectWithSuggestions(os.Args[2], config, true)
+		hours, err := strconv.ParseFloat(os.Args[3], 64)
+		if err != nil {
+			fmt.Println("Invalid hours:", os.Args[3])
+			return
+		}
+
+		if _, ok := day.Projects[project]; !ok {
+			fmt.Printf("Project '%s' not found in today's tracking\n", project)
+			fmt.Println("Use 'add' to create a new entry")
+			return
+		}
+
+		pct := hoursToPercent(hours)
+		day.Projects[project] = pct
+		day.LastModified = project // Track for undo
+		data[today()] = day
+		saveData(data)
+		fmt.Printf("Updated %s to %.1f%%\n", project, pct)
+		printStatus(day)
+
+	case "summary", "sum":
+		printSummary(day)
+
+	case "report":
+		if len(os.Args) < 3 {
+			fmt.Println("Usage:")
+			fmt.Println("  timetrack report week          - Weekly report")
+			fmt.Println("  timetrack report project <name> - Project-specific report")
+			fmt.Println("  timetrack report stats         - Overall statistics")
+			return
+		}
+
+		reportType := strings.ToLower(os.Args[2])
+		switch reportType {
+		case "week", "weekly":
+			generateWeeklyReport(data)
+		case "project", "proj":
+			if len(os.Args) < 4 {
+				fmt.Println("Usage: timetrack report project <name>")
+				return
+			}
+			generateProjectReport(data, os.Args[3], config)
+		case "stats", "statistics":
+			generateStatsReport(data)
+		default:
+			fmt.Println("Unknown report type:", reportType)
+			fmt.Println("Available: week, project, stats")
+		}
+
 	default:
 		fmt.Printf("Unknown command: %s\n", cmd)
 		printHelp()
 	}
+}
+
+func handleUndo(data map[string]DayData, day *DayData) {
+	if len(day.Projects) == 0 {
+		fmt.Println("No entries to undo")
+		return
+	}
+
+	// Use the tracked last modified project
+	lastProject := day.LastModified
+
+	// If no tracking info (legacy data), fall back to asking user
+	if lastProject == "" || day.Projects[lastProject] == 0 {
+		if len(day.Projects) == 1 {
+			// Only one project, remove it
+			for p := range day.Projects {
+				lastProject = p
+				break
+			}
+		} else {
+			fmt.Println("Cannot determine last added project. Current projects:")
+			i := 1
+			for name, pct := range day.Projects {
+				fmt.Printf("  %d. %s (%.1f%%)\n", i, name, pct)
+				i++
+			}
+			fmt.Println("\nUse 'timetrack rm <project>' to remove a specific project")
+			return
+		}
+	}
+
+	if lastProject != "" {
+		pct := day.Projects[lastProject]
+		delete(day.Projects, lastProject)
+		day.LastModified = "" // Clear tracking
+		data[today()] = *day
+		saveData(data)
+		fmt.Printf("Removed %s (%.1f%%)\n", lastProject, pct)
+		printStatus(*day)
+	}
+}
+
+func printSummary(day DayData) {
+	available := getAvailablePercent(day)
+	tracked := getTotalTracked(day)
+	remaining := available - tracked
+
+	status := "✓"
+	if remaining < 0 {
+		status = "⚠️"
+	} else if remaining > 20 {
+		status = "⏳"
+	}
+
+	fmt.Printf("%s %s: %.1f%% tracked, %.1f%% remaining", status, day.Date, tracked, remaining)
+	if len(day.Projects) > 0 {
+		fmt.Print(" (")
+		i := 0
+		for name, pct := range day.Projects {
+			if i > 0 {
+				fmt.Print(", ")
+			}
+			fmt.Printf("%s:%.0f%%", name, pct)
+			i++
+			if i >= 3 {
+				fmt.Printf(" +%d more", len(day.Projects)-3)
+				break
+			}
+		}
+		fmt.Print(")")
+	}
+	fmt.Println()
 }
 
 func printHistory(data map[string]DayData, days int) {

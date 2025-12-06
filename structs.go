@@ -5,6 +5,7 @@ type DayData struct {
 	ExcludedPercent  float64            `json:"excluded_percent"`
 	Projects         map[string]float64 `json:"projects"`
 	ExcludedMeetings map[string]float64 `json:"excluded_meetings"`
+	LastModified     string             `json:"last_modified,omitempty"` // Track last added/edited project for undo
 }
 
 type RecurringMeeting struct {
