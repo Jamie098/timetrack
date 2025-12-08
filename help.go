@@ -29,11 +29,10 @@ Viewing:
 Date Flag (for add, fill, edit, rm):
   --date <date> or -d <date>   Work with a specific date
 
-  Supported formats:
-    DD-MM-YYYY (UK format, preferred): 05-12-2024
-    YYYY-MM-DD (ISO format):           2024-12-05
-    DD/MM/YYYY (UK format):            05/12/2024
-    MM/DD/YYYY (US format):            12/05/2024
+  Supported formats (UK only):
+    DD-MM-YYYY (preferred): 05-12-2024
+    DD/MM/YYYY:             05/12/2024
+    YYYY-MM-DD (ISO):       2024-12-05
 
   Examples:
     timetrack add bugs 2 --date 05-12-2024
