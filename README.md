@@ -14,6 +14,8 @@ A powerful command-line time tracking tool built in Go. Track your workday in ho
 - **Recurring Meetings** - Auto-exclude ceremony time on specific days
 - **Desktop Notifications** - Optional reminder service
 - **Project Aliases** - Short names for long project titles
+- **Auto-Fill Remaining Time** - Quickly assign all untracked time to a project
+- **Timesheet URL Management** - Store and open your online timesheet with one command
 
 ## Installation
 
@@ -101,6 +103,7 @@ timetrack export json       # Export as JSON
 ```bash
 timetrack                        # Interactive mode
 timetrack add <project> <hours>  # Add/update time
+timetrack fill <project>         # Fill remaining time with project
 timetrack edit <project> <hours> # Update existing entry
 timetrack exclude <name> <hours> # Exclude ceremony time (one-off)
 timetrack rm <project>           # Remove project
@@ -160,6 +163,15 @@ timetrack config          # Show current config
 timetrack config edit     # Edit config file
 ```
 
+### Timesheet URL
+
+```bash
+timetrack url set <url>   # Set your online timesheet URL
+timetrack url open        # Open timesheet in browser
+timetrack url             # Show current URL
+timetrack url rm          # Clear stored URL
+```
+
 ### Reminders (Optional)
 
 ```bash
@@ -199,10 +211,21 @@ timetrack add automation 2 # Matches "CT.GOV Automation"
 - **Over-allocation**: "⚠️ Warning: Over-allocated by 25.0%!"
 - **Near completion**: "💡 Only 6.2% remaining - almost done!"
 
+### Fill Remaining Time
+
+The `fill` command automatically assigns all remaining time to a project:
+
+```bash
+timetrack fill "Project Name"    # Fill all remaining time
+```
+
+Perfect for days where most time goes to one project. If you have a 5% recurring meeting, `fill` will automatically assign the remaining 95% (7.6 hours) to your project.
+
 ### Edit vs Add
 
 - `add` creates or overwrites entries
 - `edit` only updates existing entries (safer)
+- `fill` assigns all remaining time to a project
 - `undo` removes the most recent entry
 
 ## Data Storage
@@ -270,6 +293,32 @@ timetrack summary
 timetrack                    # Verify all time tracked
 ```
 
+### Quick Fill Workflow
+
+```bash
+# Morning - spent some time in meetings and bug fixes
+timetrack add bugs 1.5
+
+# Rest of the day on main project - use fill!
+timetrack fill "Main Project"    # Automatically fills remaining 6.1 hours
+
+# Or if you have recurring meetings (e.g., 5% standup)
+timetrack fill "Main Project"    # Fills 95% - 18.75% = 76.25% (6.1 hours)
+```
+
+### Timesheet URL Setup
+
+```bash
+# One-time setup - store your online timesheet URL
+timetrack url set "https://company.sharepoint.com/timesheets/mysheet.xlsx"
+
+# Anytime you need to open it
+timetrack url open               # Opens in default browser
+
+# Check what's stored
+timetrack url                    # Shows current URL
+```
+
 ### Weekly Reporting
 
 ```bash
@@ -302,9 +351,11 @@ timetrack alias b "Project Beta"
 1. **Use Interactive Mode**: When starting out, run `timetrack` without arguments for guided interface
 2. **Fuzzy Match**: You don't need exact project names - "auto", "automation", "ctg" all work
 3. **Track as You Go**: Add time throughout the day rather than at the end
-4. **Check History**: Use `timetrack history` to review past weeks
-5. **Set Reminders**: Use `timetrack start-bg` to get notifications at set times
-6. **Export Weekly**: Run `timetrack export csv` every Friday for weekly reports
+4. **Use Fill for Efficiency**: If most of your day is on one project, use `timetrack fill <project>` instead of calculating hours
+5. **Store Timesheet URL**: Set up your online timesheet URL once with `timetrack url set <url>` and open it anytime with `timetrack url open`
+6. **Check History**: Use `timetrack history` to review past weeks
+7. **Set Reminders**: Use `timetrack start-bg` to get notifications at set times
+8. **Export Weekly**: Run `timetrack export csv` every Friday for weekly reports
 
 ## Troubleshooting
 
