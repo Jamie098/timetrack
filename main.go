@@ -34,16 +34,25 @@ func main() {
 		printHelp()
 
 	case "add":
-		if len(os.Args) < 4 {
-			fmt.Println("Usage: timetrack add <project> <hours>")
-			return
-		}
-		project := resolveProjectWithSuggestions(os.Args[2], config, true)
-		hours, err := strconv.ParseFloat(os.Args[3], 64)
+		targetDate, args, err := getTargetDate(os.Args[2:], "add")
 		if err != nil {
-			fmt.Println("Invalid hours:", os.Args[3])
+			fmt.Println("Error:", err)
 			return
 		}
+
+		if len(args) < 2 {
+			fmt.Println("Usage: timetrack add <project> <hours> [--date YYYY-MM-DD]")
+			return
+		}
+		project := resolveProjectWithSuggestions(args[0], config, true)
+		hours, err := strconv.ParseFloat(args[1], 64)
+		if err != nil {
+			fmt.Println("Invalid hours:", args[1])
+			return
+		}
+
+		// Get data for target date
+		targetDay := getDateData(data, config, targetDate)
 
 		// Validate time
 		pct := hoursToPercent(hours)
@@ -52,52 +61,77 @@ func main() {
 				hours, pct, hours/10)
 		}
 
-		if day.Projects == nil {
-			day.Projects = make(map[string]float64)
+		if targetDay.Projects == nil {
+			targetDay.Projects = make(map[string]float64)
 		}
-		day.Projects[project] = pct
-		day.LastModified = project // Track for undo
-		data[today()] = day
+		targetDay.Projects[project] = pct
+		targetDay.LastModified = project // Track for undo
+		data[targetDate] = targetDay
 		saveData(data)
 
 		// Check total allocation
-		total := getTotalTracked(day)
-		available := getAvailablePercent(day)
+		total := getTotalTracked(targetDay)
+		available := getAvailablePercent(targetDay)
 		if total > available {
-			fmt.Printf("Added %.1f%% to %s\n", pct, project)
+			fmt.Printf("Added %.1f%% to %s", pct, project)
+			if targetDate != today() {
+				fmt.Printf(" on %s", targetDate)
+			}
+			fmt.Println()
 			fmt.Printf("⚠️  Warning: Over-allocated by %.1f%%!\n", total-available)
 		} else {
-			fmt.Printf("Added %.1f%% to %s\n", pct, project)
+			fmt.Printf("Added %.1f%% to %s", pct, project)
+			if targetDate != today() {
+				fmt.Printf(" on %s", targetDate)
+			}
+			fmt.Println()
 		}
-		printStatus(day)
+		printStatus(targetDay)
 
 	case "fill":
-		if len(os.Args) < 3 {
-			fmt.Println("Usage: timetrack fill <project>")
+		targetDate, args, err := getTargetDate(os.Args[2:], "fill")
+		if err != nil {
+			fmt.Println("Error:", err)
 			return
 		}
-		project := resolveProjectWithSuggestions(os.Args[2], config, true)
 
-		available := getAvailablePercent(day)
-		tracked := getTotalTracked(day)
+		if len(args) < 1 {
+			fmt.Println("Usage: timetrack fill <project> [--date YYYY-MM-DD]")
+			return
+		}
+		project := resolveProjectWithSuggestions(args[0], config, true)
+
+		// Get data for target date
+		targetDay := getDateData(data, config, targetDate)
+
+		available := getAvailablePercent(targetDay)
+		tracked := getTotalTracked(targetDay)
 		remaining := available - tracked
 
 		if remaining <= 0 {
-			fmt.Printf("⚠️  No remaining time to fill (%.1f%% available, %.1f%% already tracked)\n", available, tracked)
+			fmt.Printf("⚠️  No remaining time to fill (%.1f%% available, %.1f%% already tracked)", available, tracked)
+			if targetDate != today() {
+				fmt.Printf(" on %s", targetDate)
+			}
+			fmt.Println()
 			return
 		}
 
-		if day.Projects == nil {
-			day.Projects = make(map[string]float64)
+		if targetDay.Projects == nil {
+			targetDay.Projects = make(map[string]float64)
 		}
-		day.Projects[project] = remaining
-		day.LastModified = project // Track for undo
-		data[today()] = day
+		targetDay.Projects[project] = remaining
+		targetDay.LastModified = project // Track for undo
+		data[targetDate] = targetDay
 		saveData(data)
 
 		remainingHours := remaining / 100.0 * 8.0
-		fmt.Printf("Filled remaining %.1f%% (%.2f hours) to %s\n", remaining, remainingHours, project)
-		printStatus(day)
+		fmt.Printf("Filled remaining %.1f%% (%.2f hours) to %s", remaining, remainingHours, project)
+		if targetDate != today() {
+			fmt.Printf(" on %s", targetDate)
+		}
+		fmt.Println()
+		printStatus(targetDay)
 
 	case "exclude", "ex":
 		if len(os.Args) < 4 {
@@ -125,19 +159,37 @@ func main() {
 		printStatus(day)
 
 	case "rm", "remove":
-		if len(os.Args) < 3 {
-			fmt.Println("Usage: timetrack rm <project>")
+		targetDate, args, err := getTargetDate(os.Args[2:], "rm")
+		if err != nil {
+			fmt.Println("Error:", err)
 			return
 		}
-		project := resolveProject(os.Args[2], config)
-		if _, ok := day.Projects[project]; ok {
-			delete(day.Projects, project)
-			data[today()] = day
+
+		if len(args) < 1 {
+			fmt.Println("Usage: timetrack rm <project> [--date YYYY-MM-DD]")
+			return
+		}
+		project := resolveProject(args[0], config)
+
+		// Get data for target date
+		targetDay := getDateData(data, config, targetDate)
+
+		if _, ok := targetDay.Projects[project]; ok {
+			delete(targetDay.Projects, project)
+			data[targetDate] = targetDay
 			saveData(data)
-			fmt.Printf("Removed %s\n", project)
-			printStatus(day)
+			fmt.Printf("Removed %s", project)
+			if targetDate != today() {
+				fmt.Printf(" from %s", targetDate)
+			}
+			fmt.Println()
+			printStatus(targetDay)
 		} else {
-			fmt.Printf("Project '%s' not found\n", project)
+			fmt.Printf("Project '%s' not found", project)
+			if targetDate != today() {
+				fmt.Printf(" on %s", targetDate)
+			}
+			fmt.Println()
 		}
 
 	case "rmex":
@@ -475,30 +527,47 @@ func main() {
 		handleUndo(data, &day)
 
 	case "edit":
-		if len(os.Args) < 4 {
-			fmt.Println("Usage: timetrack edit <project> <hours>")
-			return
-		}
-		project := resolveProjectWithSuggestions(os.Args[2], config, true)
-		hours, err := strconv.ParseFloat(os.Args[3], 64)
+		targetDate, args, err := getTargetDate(os.Args[2:], "edit")
 		if err != nil {
-			fmt.Println("Invalid hours:", os.Args[3])
+			fmt.Println("Error:", err)
 			return
 		}
 
-		if _, ok := day.Projects[project]; !ok {
-			fmt.Printf("Project '%s' not found in today's tracking\n", project)
+		if len(args) < 2 {
+			fmt.Println("Usage: timetrack edit <project> <hours> [--date YYYY-MM-DD]")
+			return
+		}
+		project := resolveProjectWithSuggestions(args[0], config, true)
+		hours, err := strconv.ParseFloat(args[1], 64)
+		if err != nil {
+			fmt.Println("Invalid hours:", args[1])
+			return
+		}
+
+		// Get data for target date
+		targetDay := getDateData(data, config, targetDate)
+
+		if _, ok := targetDay.Projects[project]; !ok {
+			fmt.Printf("Project '%s' not found in tracking", project)
+			if targetDate != today() {
+				fmt.Printf(" for %s", targetDate)
+			}
+			fmt.Println()
 			fmt.Println("Use 'add' to create a new entry")
 			return
 		}
 
 		pct := hoursToPercent(hours)
-		day.Projects[project] = pct
-		day.LastModified = project // Track for undo
-		data[today()] = day
+		targetDay.Projects[project] = pct
+		targetDay.LastModified = project // Track for undo
+		data[targetDate] = targetDay
 		saveData(data)
-		fmt.Printf("Updated %s to %.1f%%\n", project, pct)
-		printStatus(day)
+		fmt.Printf("Updated %s to %.1f%%", project, pct)
+		if targetDate != today() {
+			fmt.Printf(" on %s", targetDate)
+		}
+		fmt.Println()
+		printStatus(targetDay)
 
 	case "summary", "sum":
 		printSummary(day)

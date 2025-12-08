@@ -23,6 +23,15 @@ Usage:
   timetrack summary                Compact one-line status
   timetrack history [days]         Show history (default: 7 days)
 
+Date Flag (for add, fill, edit, rm):
+  --date YYYY-MM-DD or -d YYYY-MM-DD   Work with a specific date
+
+  Examples:
+    timetrack add bugs 2 --date 2024-12-05
+    timetrack fill "Main Project" -d 2024-12-04
+    timetrack edit automation 3 --date 12/05/2024
+    timetrack rm bugs --date 2024-12-05
+
 Export & Import:
   timetrack week                   Output current week as CSV (stdout)
   timetrack export [format] [file] Export data (formats: csv, json, all)

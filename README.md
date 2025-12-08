@@ -16,6 +16,7 @@ A powerful command-line time tracking tool built in Go. Track your workday in ho
 - **Project Aliases** - Short names for long project titles
 - **Auto-Fill Remaining Time** - Quickly assign all untracked time to a project
 - **Timesheet URL Management** - Store and open your online timesheet with one command
+- **Backdate Entries** - Edit time for any previous day using the `--date` flag
 
 ## Installation
 
@@ -109,6 +110,12 @@ timetrack exclude <name> <hours> # Exclude ceremony time (one-off)
 timetrack rm <project>           # Remove project
 timetrack undo                   # Remove last entry
 timetrack clear                  # Clear today's data
+
+# Work with past dates (add, fill, edit, rm support --date flag)
+timetrack add <project> <hours> --date 2024-12-05
+timetrack fill <project> -d 12/05/2024
+timetrack edit <project> <hours> --date 2024-12-05
+timetrack rm <project> --date 2024-12-05
 ```
 
 ### Viewing Data
@@ -221,6 +228,31 @@ timetrack fill "Project Name"    # Fill all remaining time
 
 Perfect for days where most time goes to one project. If you have a 5% recurring meeting, `fill` will automatically assign the remaining 95% (7.6 hours) to your project.
 
+### Backdating Entries
+
+You can add, edit, fill, or remove time for any previous day using the `--date` or `-d` flag:
+
+```bash
+# Add time to a past date
+timetrack add "Project" 3 --date 2024-12-05
+timetrack add "Project" 2 -d 12/05/2024
+
+# Fill remaining time for yesterday
+timetrack fill "Main Project" --date 2024-12-07
+
+# Edit existing entry from last week
+timetrack edit "Bugs" 1.5 --date 2024-12-01
+
+# Remove incorrect entry from past
+timetrack rm "Wrong Project" --date 2024-12-05
+```
+
+Supported date formats:
+- `YYYY-MM-DD` (2024-12-05)
+- `YYYY/MM/DD` (2024/12/05)
+- `MM/DD/YYYY` (12/05/2024)
+- `MM-DD-YYYY` (12-05-2024)
+
 ### Edit vs Add
 
 - `add` creates or overwrites entries
@@ -319,6 +351,20 @@ timetrack url open               # Opens in default browser
 timetrack url                    # Shows current URL
 ```
 
+### Backfilling Previous Week
+
+```bash
+# Forgot to track Monday? No problem!
+timetrack add "Project A" 4 --date 2024-12-02
+timetrack add "Project B" 3 --date 2024-12-02
+
+# Or use fill to complete the day
+timetrack fill "Main Project" --date 2024-12-02
+
+# Update an incorrect entry from last week
+timetrack edit "Meetings" 1 --date 2024-12-01
+```
+
 ### Weekly Reporting
 
 ```bash
@@ -352,10 +398,11 @@ timetrack alias b "Project Beta"
 2. **Fuzzy Match**: You don't need exact project names - "auto", "automation", "ctg" all work
 3. **Track as You Go**: Add time throughout the day rather than at the end
 4. **Use Fill for Efficiency**: If most of your day is on one project, use `timetrack fill <project>` instead of calculating hours
-5. **Store Timesheet URL**: Set up your online timesheet URL once with `timetrack url set <url>` and open it anytime with `timetrack url open`
-6. **Check History**: Use `timetrack history` to review past weeks
-7. **Set Reminders**: Use `timetrack start-bg` to get notifications at set times
-8. **Export Weekly**: Run `timetrack export csv` every Friday for weekly reports
+5. **Backdate When Needed**: Forgot yesterday? Use `--date` flag: `timetrack add project 5 --date 2024-12-07`
+6. **Store Timesheet URL**: Set up your online timesheet URL once with `timetrack url set <url>` and open it anytime with `timetrack url open`
+7. **Check History**: Use `timetrack history` to review past weeks and spot missing days
+8. **Set Reminders**: Use `timetrack start-bg` to get notifications at set times
+9. **Export Weekly**: Run `timetrack export csv` every Friday for weekly reports
 
 ## Troubleshooting
 
