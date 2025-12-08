@@ -71,6 +71,34 @@ func main() {
 		}
 		printStatus(day)
 
+	case "fill":
+		if len(os.Args) < 3 {
+			fmt.Println("Usage: timetrack fill <project>")
+			return
+		}
+		project := resolveProjectWithSuggestions(os.Args[2], config, true)
+
+		available := getAvailablePercent(day)
+		tracked := getTotalTracked(day)
+		remaining := available - tracked
+
+		if remaining <= 0 {
+			fmt.Printf("⚠️  No remaining time to fill (%.1f%% available, %.1f%% already tracked)\n", available, tracked)
+			return
+		}
+
+		if day.Projects == nil {
+			day.Projects = make(map[string]float64)
+		}
+		day.Projects[project] = remaining
+		day.LastModified = project // Track for undo
+		data[today()] = day
+		saveData(data)
+
+		remainingHours := remaining / 100.0 * 8.0
+		fmt.Printf("Filled remaining %.1f%% (%.2f hours) to %s\n", remaining, remainingHours, project)
+		printStatus(day)
+
 	case "exclude", "ex":
 		if len(os.Args) < 4 {
 			fmt.Println("Usage: timetrack exclude <meeting-name> <hours>")

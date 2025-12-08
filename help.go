@@ -13,6 +13,7 @@ timetrack - Track your day in hours
 Usage:
   timetrack                        Interactive mode (no args)
   timetrack add <project> <hours>  Add/update time to a project
+  timetrack fill <project>         Fill remaining time with project
   timetrack edit <project> <hours> Update existing project time
   timetrack exclude <name> <hours> Exclude ceremony time (one-off)
   timetrack rm <project>           Remove a project entry
