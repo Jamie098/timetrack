@@ -4,13 +4,15 @@ A powerful command-line time tracking tool built in Go. Track your workday in ho
 
 ## Features
 
-- **Interactive Mode** - User-friendly menu when running without arguments
+- **Simple Default View** - Running `timetrack` shows today's status
+- **Calendar View** - Visualize tracked time across multiple days in a clean table format
+- **Auto-Discovery** - Projects automatically populate from your time entries (no manual setup needed)
 - **Fuzzy Matching** - Smart project name matching (e.g., "ctg" matches "CT.GOV Automation")
 - **Color-Coded Display** - Visual feedback with green/yellow/red indicators
 - **Smart Validation** - Automatic warnings for over-allocation or unusual values
-- **Multiple Export Formats** - CSV, JSON, weekly or full history
+- **Multiple Export Formats** - CSV, JSON, weekly or full history with alphabetical project ordering
 - **CSV Import** - Import existing timesheet data
-- **Comprehensive Reports** - Weekly summaries, project-specific reports, and statistics
+- **Interactive Mode** - Optional user-friendly menu mode
 - **Recurring Meetings** - Auto-exclude ceremony time on specific days
 - **Desktop Notifications** - Optional reminder service
 - **Project Aliases** - Short names for long project titles
@@ -36,20 +38,7 @@ A powerful command-line time tracking tool built in Go. Track your workday in ho
 
 ## Quick Start
 
-### 1. Configure Your Projects
-
-Parse your Excel header to automatically set up projects and aliases:
-
-```bash
-timetrack projects parse "Date,CT.GOV Automation,Bugs & Issues,Feature Development,Total Time Spent"
-```
-
-This will:
-- Extract project names from the header
-- Auto-generate short aliases (e.g., "ctgo", "bugs", "feat")
-- Configure your project columns for export
-
-### 2. Set Up Recurring Meetings
+### 1. Set Up Recurring Meetings (Optional)
 
 Add ceremonies that happen regularly:
 
@@ -61,12 +50,7 @@ timetrack meeting add planning 2 mon
 
 **Note:** All time input is in **hours** (based on 8-hour workday).
 
-### 3. Track Your Time
-
-**Interactive mode** (easiest for beginners):
-```bash
-timetrack
-```
+### 2. Track Your Time
 
 **Command-line mode**:
 ```bash
@@ -75,34 +59,42 @@ timetrack add bugs 1.5      # Add 1.5 hours to Bugs & Issues
 timetrack add feat 3        # Add 3 hours to Feature Development
 ```
 
+**Interactive mode** (optional menu interface):
+```bash
+timetrack interactive
+```
+
 Fuzzy matching works automatically:
 ```bash
 timetrack add automation 2  # Matches "CT.GOV Automation"
 timetrack add bug 1         # Matches "Bugs & Issues"
 ```
 
-### 4. View Your Status
+### 3. View Your Status
 
 ```bash
-timetrack           # Interactive mode shows current status
-timetrack summary   # Compact one-line view
+timetrack              # Show today's status
+timetrack show         # Calendar view of last 7 days
+timetrack show 14      # Calendar view of last 14 days
 ```
 
-### 5. Export for Reporting
+### 4. Export for Reporting
 
 ```bash
-timetrack week              # Print current week as CSV (stdout)
-timetrack export csv        # Export week to timetrack-week.csv
+timetrack export csv        # Export week to timetrack-week.csv (alphabetical columns)
 timetrack export all        # Export all data to timetrack-all.csv
 timetrack export json       # Export as JSON
 ```
+
+Projects are automatically discovered from your time entries and exported in alphabetical order.
 
 ## Commands
 
 ### Basic Tracking
 
 ```bash
-timetrack                        # Interactive mode
+timetrack                        # Show today's status
+timetrack interactive            # Interactive menu mode
 timetrack add <project> <hours>  # Add/update time
 timetrack fill <project>         # Fill remaining time with project
 timetrack edit <project> <hours> # Update existing entry
@@ -121,38 +113,32 @@ timetrack rm <project> --date 2024-12-05
 ### Viewing Data
 
 ```bash
-timetrack summary              # Compact one-line status
-timetrack history [days]       # Show history (default: 7 days)
-```
-
-### Reports & Analytics
-
-```bash
-timetrack report week             # Weekly summary
-timetrack report project <name>   # Project-specific report
-timetrack report stats            # Overall statistics
+timetrack                  # Show today's status
+timetrack show [days]      # Calendar view (default: 7 days)
+timetrack show 14          # Show last 14 days
 ```
 
 ### Import/Export
 
 ```bash
 timetrack import <file.csv>       # Import from CSV
-timetrack export csv [file]       # Export current week to CSV
+timetrack export csv [file]       # Export current week to CSV (auto-discovered projects)
 timetrack export all [file]       # Export all data to CSV
 timetrack export json [file]      # Export as JSON
-timetrack week                    # Print week to stdout (legacy)
 ```
 
-### Project Configuration
+Projects are automatically discovered from your tracked time and exported in alphabetical order.
+
+### Project Management
 
 ```bash
-timetrack projects parse "Date,P1,P2,...,Total"  # Parse Excel header
-timetrack projects set "P1,P2,P3"                # Set manually
-timetrack projects list                          # List projects
-timetrack alias <short> <full>                   # Create alias
-timetrack alias rm <short>                       # Remove alias
-timetrack alias list                             # List all aliases
+timetrack projects list            # List all projects (auto-discovered from time entries)
+timetrack alias <short> <full>     # Create alias for quick entry
+timetrack alias rm <short>         # Remove alias
+timetrack alias list               # List all aliases
 ```
+
+**Note:** Projects are auto-discovered - they automatically appear when you track time to them. No need to manually configure project lists!
 
 ### Recurring Meetings
 
@@ -307,7 +293,7 @@ Date,Project1,Project2,Project3,Total Time Spent
 
 ```bash
 # Morning - check status
-timetrack
+timetrack                    # Shows today's status
 
 # Throughout day - track work
 timetrack add automation 2
@@ -318,11 +304,9 @@ timetrack add features 3
 timetrack undo
 timetrack add features 2.5
 
-# Check current status
-timetrack summary
-
-# End of day
+# End of day - check what you've tracked
 timetrack                    # Verify all time tracked
+timetrack show               # See the week at a glance
 ```
 
 ### Quick Fill Workflow
@@ -368,48 +352,53 @@ timetrack edit "Meetings" 1 --date 2024-12-01
 ### Weekly Reporting
 
 ```bash
-# View weekly summary
-timetrack report week
+# View calendar for the week
+timetrack show
+
+# View last 14 days
+timetrack show 14
 
 # Export to CSV for manager
 timetrack export csv weekly-report.csv
-
-# Check specific project
-timetrack report project "CT.GOV Automation"
 ```
 
-### Setup New Project List
+### Setting Up Aliases
 
 ```bash
-# Copy header row from Excel: "Date,ProjectA,ProjectB,ProjectC,Total Time Spent"
-timetrack projects parse "Date,ProjectA,ProjectB,ProjectC,Total Time Spent"
+# Create shortcuts for frequently-used projects
+timetrack alias auto "CT.GOV Automation"
+timetrack alias bugs "Bugs & Issues"
+timetrack alias feat "Feature Development"
 
-# Check generated aliases
+# Check your aliases
 timetrack alias list
 
-# Customize if needed
-timetrack alias a "Project Alpha"
-timetrack alias b "Project Beta"
+# Now you can use short aliases
+timetrack add auto 3
+timetrack add bugs 1.5
 ```
 
 ## Tips
 
-1. **Use Interactive Mode**: When starting out, run `timetrack` without arguments for guided interface
-2. **Fuzzy Match**: You don't need exact project names - "auto", "automation", "ctg" all work
-3. **Track as You Go**: Add time throughout the day rather than at the end
-4. **Use Fill for Efficiency**: If most of your day is on one project, use `timetrack fill <project>` instead of calculating hours
-5. **Backdate When Needed**: Forgot yesterday? Use `--date` flag: `timetrack add project 5 --date 2024-12-07`
-6. **Store Timesheet URL**: Set up your online timesheet URL once with `timetrack url set <url>` and open it anytime with `timetrack url open`
-7. **Check History**: Use `timetrack history` to review past weeks and spot missing days
-8. **Set Reminders**: Use `timetrack start-bg` to get notifications at set times
-9. **Export Weekly**: Run `timetrack export csv` every Friday for weekly reports
+1. **Quick Status Check**: Just run `timetrack` to see today's status
+2. **Calendar View**: Use `timetrack show` to see the week at a glance
+3. **Auto-Discovery**: No need to set up projects - they appear automatically when you track time
+4. **Fuzzy Match**: You don't need exact project names - "auto", "automation", "ctg" all work
+5. **Track as You Go**: Add time throughout the day rather than at the end
+6. **Use Fill for Efficiency**: If most of your day is on one project, use `timetrack fill <project>` instead of calculating hours
+7. **Backdate When Needed**: Forgot yesterday? Use `--date` flag: `timetrack add project 5 --date 2024-12-07`
+8. **Store Timesheet URL**: Set up your online timesheet URL once with `timetrack url set <url>` and open it anytime with `timetrack url open`
+9. **Interactive Mode Available**: Run `timetrack interactive` for a guided menu interface
+10. **Set Reminders**: Use `timetrack start-bg` to get notifications at set times
+11. **Export Weekly**: Run `timetrack export csv` every Friday for weekly reports
 
 ## Troubleshooting
 
 ### "Project not found"
-- Use `timetrack projects list` to see configured projects
+- Use `timetrack projects list` to see all projects you've tracked
 - Use `timetrack alias list` to see available aliases
-- Fuzzy matching may suggest alternatives
+- Fuzzy matching will suggest alternatives
+- Don't worry - if no match is found, your input will be used as a new project name
 
 ### Over-allocated warnings
 - You've tracked more than 8 hours (100%)

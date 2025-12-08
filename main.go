@@ -23,7 +23,8 @@ func main() {
 	}
 
 	if len(os.Args) < 2 {
-		runInteractive(data, config, day)
+		// Show today's status by default
+		printStatus(day)
 		return
 	}
 
@@ -32,6 +33,10 @@ func main() {
 	switch cmd {
 	case "help", "-h", "--help":
 		printHelp()
+
+	case "interactive", "i":
+		// Explicit interactive mode
+		runInteractive(data, config, day)
 
 	case "add":
 		targetDate, args, err := getTargetDate(os.Args[2:], "add")
@@ -219,14 +224,24 @@ func main() {
 			fmt.Println("Cleared today's data")
 		}
 
-	case "history", "hist":
+	case "show", "cal", "calendar":
 		days := 7
 		if len(os.Args) >= 3 {
 			if d, err := strconv.Atoi(os.Args[2]); err == nil {
 				days = d
 			}
 		}
-		printHistory(data, days)
+		printCalendar(data, days)
+
+	case "history", "hist":
+		// Legacy command - redirect to show
+		days := 7
+		if len(os.Args) >= 3 {
+			if d, err := strconv.Atoi(os.Args[2]); err == nil {
+				days = d
+			}
+		}
+		printCalendar(data, days)
 
 	case "config":
 		if len(os.Args) >= 3 && os.Args[2] == "edit" {
@@ -415,10 +430,13 @@ func main() {
 				}
 			}
 		case "list":
-			if len(config.Projects) == 0 {
-				fmt.Println("No projects configured")
+			// Auto-discover projects from all tracked time
+			projects := getAllProjects(data)
+			if len(projects) == 0 {
+				fmt.Println("No projects found in tracked time")
 			} else {
-				for i, p := range config.Projects {
+				fmt.Println("Projects (auto-discovered from your time tracking):")
+				for i, p := range projects {
 					fmt.Printf("%d. %s\n", i+1, p)
 				}
 			}
@@ -466,9 +484,6 @@ func main() {
 		config.Aliases[short] = full
 		saveConfig(config)
 		fmt.Printf("Alias set: %s → %s\n", short, full)
-
-	case "week":
-		printWeekExport(data, config)
 
 	case "import":
 		if len(os.Args) < 3 {
@@ -570,14 +585,18 @@ func main() {
 		printStatus(targetDay)
 
 	case "summary", "sum":
-		printSummary(day)
+		// Legacy command - show today's status
+		printStatus(day)
 
 	case "report":
+		fmt.Println("Note: 'report' commands are deprecated. Use 'show' to view entries and 'export' for CSV reports.")
+		fmt.Println()
+
 		if len(os.Args) < 3 {
 			fmt.Println("Usage:")
-			fmt.Println("  timetrack report week          - Weekly report")
-			fmt.Println("  timetrack report project <name> - Project-specific report")
-			fmt.Println("  timetrack report stats         - Overall statistics")
+			fmt.Println("  timetrack show [days]          - View calendar (recommended)")
+			fmt.Println("  timetrack export csv           - Export week to CSV")
+			fmt.Println("  timetrack export all           - Export all data")
 			return
 		}
 
@@ -595,7 +614,7 @@ func main() {
 			generateStatsReport(data)
 		default:
 			fmt.Println("Unknown report type:", reportType)
-			fmt.Println("Available: week, project, stats")
+			fmt.Println("Try: timetrack show [days]")
 		}
 
 	case "url":

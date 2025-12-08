@@ -11,7 +11,8 @@ func printHelp() {
 timetrack - Track your day in hours
 
 Usage:
-  timetrack                        Interactive mode (no args)
+  timetrack                        Show today's status
+  timetrack interactive            Interactive menu mode
   timetrack add <project> <hours>  Add/update time to a project
   timetrack fill <project>         Fill remaining time with project
   timetrack edit <project> <hours> Update existing project time
@@ -20,35 +21,37 @@ Usage:
   timetrack rmex <name>            Remove an excluded meeting
   timetrack undo                   Remove last added project
   timetrack clear                  Clear today's data
-  timetrack summary                Compact one-line status
-  timetrack history [days]         Show history (default: 7 days)
+
+Viewing:
+  timetrack                        Show today's status
+  timetrack show [days]            Calendar view (default: 7 days)
 
 Date Flag (for add, fill, edit, rm):
-  --date YYYY-MM-DD or -d YYYY-MM-DD   Work with a specific date
+  --date <date> or -d <date>   Work with a specific date
+
+  Supported formats:
+    DD-MM-YYYY (UK format, preferred): 05-12-2024
+    YYYY-MM-DD (ISO format):           2024-12-05
+    DD/MM/YYYY (UK format):            05/12/2024
+    MM/DD/YYYY (US format):            12/05/2024
 
   Examples:
-    timetrack add bugs 2 --date 2024-12-05
-    timetrack fill "Main Project" -d 2024-12-04
-    timetrack edit automation 3 --date 12/05/2024
-    timetrack rm bugs --date 2024-12-05
+    timetrack add bugs 2 --date 05-12-2024
+    timetrack fill "Main Project" -d 2024-12-05
+    timetrack edit automation 3 --date 05/12/2024
+    timetrack rm bugs -d 05-12-2024
 
 Export & Import:
-  timetrack week                   Output current week as CSV (stdout)
-  timetrack export [format] [file] Export data (formats: csv, json, all)
+  timetrack export csv [file]      Export week to CSV (auto-discovered projects)
+  timetrack export all [file]      Export all data to CSV
+  timetrack export json [file]     Export as JSON
   timetrack import <csv-file>      Import data from CSV
 
-Reports & Analytics:
-  timetrack report week            Weekly summary report
-  timetrack report project <name>  Project-specific report
-  timetrack report stats           Overall statistics
-
 Projects & Aliases:
-  timetrack projects parse "Date,P1,P2,...,Total"   Parse Excel header (auto-aliases)
-  timetrack projects set "P1,P2,P3"                 Set project columns manually
-  timetrack projects list                           List project columns
-  timetrack alias <short> <full>                    Create/update alias
-  timetrack alias rm <short>                        Remove alias
-  timetrack alias list                              List all aliases
+  timetrack projects list          List all projects (auto-discovered from time)
+  timetrack alias <short> <full>   Create/update alias
+  timetrack alias rm <short>       Remove alias
+  timetrack alias list             List all aliases
 
 Config:
   timetrack config                 Show current config
@@ -66,28 +69,6 @@ Reminders:
   timetrack start-bg               Start reminder service (background)
   timetrack stop                   Stop reminder service
   timetrack status                 Check if reminder service is running
-
-Features:
-  • Interactive mode when no command specified
-  • Fuzzy matching for project names
-  • Color-coded display (green/yellow/red based on allocation)
-  • Automatic warnings for over-allocation or unusual values
-  • CSV import/export with multiple formats
-  • Comprehensive reports and analytics
-
-Quick Start:
-  1. Parse your Excel header:
-     timetrack projects parse "Date,CT.GOV Automation,Bugs,...,Total"
-
-  2. Add recurring meetings:
-     timetrack meeting add standup 0.5 weekdays
-
-  3. Track time (supports fuzzy matching):
-     timetrack add ctgo 2
-     timetrack add bugs 1.5
-
-  4. View reports:
-     timetrack report week
 
 Days: mon, tue, wed, thu, fri, sat, sun, daily, weekdays
 
@@ -118,14 +99,9 @@ func printConfig(config Config) {
 		}
 	}
 
-	fmt.Println("\nProjects (column order for export):")
-	if len(config.Projects) == 0 {
-		fmt.Println("   (none - use 'timetrack projects parse \"...\"')")
-	} else {
-		for i, p := range config.Projects {
-			fmt.Printf("   %d. %s\n", i+1, p)
-		}
-	}
+	fmt.Println("\nProjects:")
+	fmt.Println("   Auto-discovered from your time entries")
+	fmt.Println("   Use 'timetrack projects list' to see all tracked projects")
 
 	fmt.Println("\nAliases:")
 	if len(config.Aliases) == 0 {

@@ -35,10 +35,12 @@ func parseDate(dateStr string) (string, error) {
 
 	// Try various date formats
 	formats := []string{
-		"2006-01-02",     // YYYY-MM-DD
+		"2006-01-02",     // YYYY-MM-DD (ISO format)
+		"02-01-2006",     // DD-MM-YYYY (UK format) - try this BEFORE US format
 		"2006/01/02",     // YYYY/MM/DD
-		"01/02/2006",     // MM/DD/YYYY
-		"01-02-2006",     // MM-DD-YYYY
+		"02/01/2006",     // DD/MM/YYYY (UK format)
+		"01/02/2006",     // MM/DD/YYYY (US format)
+		"01-02-2006",     // MM-DD-YYYY (US format)
 		"2-Jan-06",       // Excel format
 		"2-Jan",          // Short format (current year)
 	}
@@ -55,7 +57,7 @@ func parseDate(dateStr string) (string, error) {
 		}
 	}
 
-	return "", fmt.Errorf("invalid date format: %s (try YYYY-MM-DD)", dateStr)
+	return "", fmt.Errorf("invalid date format: %s (try DD-MM-YYYY or YYYY-MM-DD)", dateStr)
 }
 
 func getTargetDate(args []string, flagName string) (string, []string, error) {
