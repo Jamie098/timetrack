@@ -173,6 +173,15 @@ timetrack start                       # Start service (foreground)
 timetrack start-bg                    # Start service (background)
 timetrack stop                        # Stop service
 timetrack status                      # Check if running
+timetrack test-notify                 # Send test notification
+```
+
+### Advanced Commands
+
+```bash
+# Rarely needed - projects are auto-discovered
+timetrack projects set "Proj1,Proj2,Proj3"       # Manually set project list
+timetrack projects parse "Date,P1,P2,...,Total"  # Parse Excel header for projects
 ```
 
 ## Visual Indicators

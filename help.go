@@ -68,6 +68,11 @@ Reminders:
   timetrack start-bg               Start reminder service (background)
   timetrack stop                   Stop reminder service
   timetrack status                 Check if reminder service is running
+  timetrack test-notify            Send a test notification
+
+Advanced Projects (rarely needed):
+  timetrack projects set "P1,P2"   Manually configure project list
+  timetrack projects parse "..."   Parse Excel header for projects
 
 Days: mon, tue, wed, thu, fri, sat, sun, daily, weekdays
 

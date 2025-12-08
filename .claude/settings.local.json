@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(./timetrack.exe url:*)",
+      "Bash(go build:*)",
+      "Bash(./timetrack.exe clear:*)",
+      "Bash(./timetrack.exe summary:*)",
+      "Bash(./timetrack.exe fill:*)",
+      "Bash(./timetrack.exe add:*)",
+      "Bash(./timetrack.exe help:*)",
+      "Bash(./timetrack.exe edit:*)",
+      "Bash(./timetrack.exe history:*)",
+      "Bash(./timetrack.exe rm:*)",
+      "Bash(./timetrack.exe show:*)",
+      "Bash(./timetrack.exe export:*)",
+      "Bash(cat:*)",
+      "Bash(./timetrack.exe projects:*)",
+      "Bash(./timetrack.exe:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
