@@ -19,4 +19,5 @@ type Config struct {
 	RecurringMeetings []RecurringMeeting `json:"recurring_meetings"`
 	Projects          []string           `json:"projects"`
 	Aliases           map[string]string  `json:"aliases"`
+	TimesheetURL      string             `json:"timesheet_url,omitempty"`
 }

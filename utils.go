@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	"os/exec"
+	"runtime"
 	"strings"
 )
 
@@ -72,4 +74,25 @@ func safeSubstring(s string, length int) string {
 		return s
 	}
 	return s[:length]
+}
+
+func openURL(url string) {
+	var cmd *exec.Cmd
+
+	switch runtime.GOOS {
+	case "windows":
+		cmd = exec.Command("cmd", "/c", "start", url)
+	case "darwin":
+		cmd = exec.Command("open", url)
+	default: // linux, freebsd, openbsd, etc.
+		cmd = exec.Command("xdg-open", url)
+	}
+
+	err := cmd.Start()
+	if err != nil {
+		fmt.Println("Error opening URL:", err)
+		fmt.Println("Please open manually:", url)
+	} else {
+		fmt.Println("Opening timesheet in browser...")
+	}
 }

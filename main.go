@@ -501,6 +501,46 @@ func main() {
 			fmt.Println("Available: week, project, stats")
 		}
 
+	case "url":
+		if len(os.Args) < 3 {
+			if config.TimesheetURL == "" {
+				fmt.Println("No timesheet URL configured")
+				fmt.Println("Usage: timetrack url set <url>")
+			} else {
+				fmt.Println("Timesheet URL:", config.TimesheetURL)
+			}
+			return
+		}
+
+		subcmd := strings.ToLower(os.Args[2])
+		switch subcmd {
+		case "set":
+			if len(os.Args) < 4 {
+				fmt.Println("Usage: timetrack url set <url>")
+				return
+			}
+			config.TimesheetURL = os.Args[3]
+			saveConfig(config)
+			fmt.Println("Timesheet URL set to:", config.TimesheetURL)
+
+		case "open":
+			if config.TimesheetURL == "" {
+				fmt.Println("No timesheet URL configured")
+				fmt.Println("Use: timetrack url set <url>")
+				return
+			}
+			openURL(config.TimesheetURL)
+
+		case "rm", "remove", "clear":
+			config.TimesheetURL = ""
+			saveConfig(config)
+			fmt.Println("Timesheet URL cleared")
+
+		default:
+			fmt.Println("Unknown url command:", subcmd)
+			fmt.Println("Available: set, open, rm")
+		}
+
 	default:
 		fmt.Printf("Unknown command: %s\n", cmd)
 		printHelp()

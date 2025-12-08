@@ -46,6 +46,10 @@ Config:
   timetrack meeting add <name> <hours> <days>   Add recurring meeting
   timetrack meeting rm <name>      Remove recurring meeting
   timetrack reminder <times>       Set reminder times (e.g., "09:00,12:00,15:00")
+  timetrack url set <url>          Set online timesheet URL
+  timetrack url open               Open timesheet URL in browser
+  timetrack url                    Show current timesheet URL
+  timetrack url rm                 Clear timesheet URL
 
 Reminders:
   timetrack start                  Start reminder service (foreground)
@@ -125,6 +129,13 @@ func printConfig(config Config) {
 		for _, k := range aliases {
 			fmt.Printf("   • %s → %s\n", k, config.Aliases[k])
 		}
+	}
+
+	fmt.Println("\nTimesheet URL:")
+	if config.TimesheetURL == "" {
+		fmt.Println("   (not set)")
+	} else {
+		fmt.Printf("   %s\n", config.TimesheetURL)
 	}
 	fmt.Println()
 }
