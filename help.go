@@ -16,6 +16,7 @@ Usage:
   timetrack add <project> <hours>  Add/update time to a project
   timetrack fill <project>         Fill remaining time with project
   timetrack edit <project> <hours> Update existing project time
+  timetrack copy <date>            Copy projects from another date to today
   timetrack exclude <name> <hours> Exclude ceremony time (one-off)
   timetrack rm <project>           Remove a project entry
   timetrack rmex <name>            Remove an excluded meeting
@@ -26,7 +27,7 @@ Viewing:
   timetrack                        Show today's status
   timetrack show [days]            Calendar view (default: 7 days)
 
-Date Flag (for add, fill, edit, rm):
+Date Flag (for add, fill, edit, rm, copy):
   --date <date> or -d <date>   Work with a specific date
 
   Supported formats (UK only):
@@ -39,6 +40,8 @@ Date Flag (for add, fill, edit, rm):
     timetrack fill "Main Project" -d 2024-12-05
     timetrack edit automation 3 --date 05/12/2024
     timetrack rm bugs -d 05-12-2024
+    timetrack copy 08-12-2024            (copy to today)
+    timetrack copy 08-12-2024 -d 10-12-2024  (copy to specific date)
 
 Export & Import:
   timetrack export csv [file]      Export week to CSV (auto-discovered projects)

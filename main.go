@@ -214,6 +214,65 @@ func main() {
 			fmt.Printf("Excluded meeting '%s' not found\n", name)
 		}
 
+	case "copy":
+		targetDate, args, err := getTargetDate(os.Args[2:], "copy")
+		if err != nil {
+			fmt.Println("Error:", err)
+			return
+		}
+
+		var sourceDate string
+		if len(args) > 0 {
+			// Parse the source date from the first argument
+			sourceDate, err = parseDate(args[0])
+			if err != nil {
+				fmt.Println("Error:", err)
+				return
+			}
+		} else {
+			fmt.Println("Usage: timetrack copy <source-date> [--date <target-date>]")
+			fmt.Println("Example: timetrack copy 08-12-2025")
+			fmt.Println("         timetrack copy 08-12-2025 --date 10-12-2025")
+			return
+		}
+
+		// Get source day data
+		sourceDay, ok := data[sourceDate]
+		if !ok {
+			fmt.Printf("No data found for %s\n", sourceDate)
+			return
+		}
+
+		if len(sourceDay.Projects) == 0 {
+			fmt.Printf("No projects found for %s\n", sourceDate)
+			return
+		}
+
+		// Get target day data (will apply recurring meetings if new)
+		targetDay := getDateData(data, config, targetDate)
+
+		// Copy projects from source to target
+		if targetDay.Projects == nil {
+			targetDay.Projects = make(map[string]float64)
+		}
+
+		for project, percent := range sourceDay.Projects {
+			targetDay.Projects[project] = percent
+		}
+
+		// Save the target day
+		data[targetDate] = targetDay
+		saveData(data)
+
+		fmt.Printf("Copied %d project(s) from %s", len(sourceDay.Projects), sourceDate)
+		if targetDate != today() {
+			fmt.Printf(" to %s", targetDate)
+		} else {
+			fmt.Print(" to today")
+		}
+		fmt.Println()
+		printStatus(targetDay)
+
 	case "clear":
 		reader := bufio.NewReader(os.Stdin)
 		fmt.Print("Clear today's data? (y/n): ")
